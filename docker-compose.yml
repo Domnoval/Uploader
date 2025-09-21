@@ -135,8 +135,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      ollama:
-        condition: service_healthy
       mailhog:
         condition: service_started
     stdin_open: true
@@ -147,7 +145,7 @@ services:
     image: mailhog/mailhog
     ports:
       - "1025:1025" # SMTP server
-      - "8025:8025" # Web UI to view emails
+      - "8125:8025" # Web UI to view emails
     environment:
       MH_STORAGE: maildir
       MH_MAILDIR_PATH: /maildir

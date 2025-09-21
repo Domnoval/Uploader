@@ -38,7 +38,6 @@
     "@radix-ui/react-tabs": "^1.1.0",
     "@radix-ui/react-toast": "^1.2.1",
     "@radix-ui/react-tooltip": "^1.1.2",
-    "canvas": "^2.11.2",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "colorthief": "^2.4.0",
@@ -53,7 +52,6 @@
     "next-auth": "^4.24.7",
     "nodemailer": "^6.9.15",
     "onnxruntime-web": "^1.19.0",
-    "opencv-wasm": "^4.9.0",
     "papaparse": "^5.4.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -67,7 +65,6 @@
     "zustand": "^4.5.5"
   },
   "devDependencies": {
-    "@types/canvas": "^2.11.3",
     "@types/formidable": "^3.4.5",
     "@types/jest": "^29.5.12",
     "@types/multer": "^1.4.12",
