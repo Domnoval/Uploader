@@ -1,4 +1,17 @@
+'use client';
+
+import { Uploader } from '@/components/Uploader';
+
 export default function Home() {
+  const handleUploadComplete = (files: any[]) => {
+    console.log('Upload completed:', files);
+    // Here you can process the uploaded files further
+    // - Extract color palette
+    // - Generate AI descriptions
+    // - Create mockups
+    // - Save to database
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-16">
@@ -10,6 +23,15 @@ export default function Home() {
             Transform your artwork with AI-powered processing, smart cropping,
             background removal, and intelligent metadata generation.
           </p>
+        </div>
+
+        {/* Upload Section */}
+        <div className="mb-12">
+          <Uploader
+            onUploadComplete={handleUploadComplete}
+            maxFiles={5}
+            className="mb-8"
+          />
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 mb-12">
@@ -40,20 +62,13 @@ export default function Home() {
 
         <div className="text-center">
           <div className="bg-white rounded-lg p-8 shadow-lg inline-block">
-            <h2 className="text-2xl font-bold mb-4">🚀 Getting Started</h2>
+            <h2 className="text-2xl font-bold mb-4">🚀 Service Status</h2>
             <div className="text-left space-y-2">
               <p>✅ PostgreSQL: Running</p>
               <p>✅ Redis: Running</p>
               <p>✅ MailHog: Running (port 8125)</p>
-              <p>🔄 Ollama: Loading models...</p>
-            </div>
-            <div className="mt-6">
-              <button
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-                disabled
-              >
-                Upload Artwork (Coming Soon)
-              </button>
+              <p>✅ Upload API: Ready</p>
+              <p>🔄 Ollama: Available for AI processing</p>
             </div>
           </div>
         </div>
