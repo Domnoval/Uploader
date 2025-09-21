@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+  artworks Artwork[]
+  settings Settings?
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Artwork {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+
+  // Source media
+  originalPath String
+  cleanedPath  String?
+  maskPath     String?
+  thumbs       Json? // {sm, md, lg}
+  closeups     Json? // array of crops
+  mockups      Json? // array of mockup images
+
+  // Metadata (auto+manual)
+  title        String
+  slug         String   @unique
+  description  String   @db.Text
+  altText      String
+  keywords     String[]
+  paletteHex   String[]
+  dominantHex  String
+  styleHints   String[]
+  materials    String?
+  medium       String?
+  surface      String?
+  sizeWIn      Float?
+  sizeHIn      Float?
+  depthIn      Float?
+  year         Int?
+  framing      String?
+  signature    String?
+  edition      String?
+  series       String?
+
+  // Pricing
+  priceUSD      Int?
+  priceNotes    String?
+  pricingInputs Json? // snapshot of knobs used
+
+  // Export / publishing
+  status      String   @default("draft") // draft|ready|exported
+  externalIds Json? // {wixId, shopifyId, ...}
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([slug])
+  @@index([status])
+}
+
+model Settings {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Storage preferences
+  storageType String @default("local") // local|s3
+  s3Config    Json?
+
+  // Processing preferences
+  bgRemovalProvider String @default("local") // local|rembg|replicate
+  llmProvider       String @default("none") // none|openai
+
+  // Pricing defaults
+  pricingDefaults Json @default("{\"baseRate\": 1.8, \"mediumMultipliers\": {\"oil\": 1.25, \"acrylic\": 1.1, \"mixed\": 1.15, \"watercolor\": 0.9}, \"popularityMultiplier\": 1.0, \"scarcityMultiplier\": 1.0}")
+
+  // Mockup settings
+  mockupSettings Json @default("{\"scenes\": [\"livingroom\", \"gallery\", \"studio\"], \"frameStyles\": [\"black-float\", \"natural-oak\", \"white-gallery\"], \"shadowStrength\": 0.3}")
+
+  // Export settings
+  wixConfig Json?
+  webhooks  Json?
+
+  // Watermark settings
+  watermarkEnabled  Boolean @default(false)
+  watermarkText     String?
+  watermarkPosition String  @default("bottom-right")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
