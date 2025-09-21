@@ -4,6 +4,27 @@ import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, X, CheckCircle, AlertCircle, Image as ImageIcon } from 'lucide-react';
 
+interface ArtworkAnalysis {
+  title: string;
+  description: string;
+  style: string;
+  medium: string;
+  subjects: string[];
+  colors: string[];
+  mood: string;
+  techniques: string[];
+  estimatedPeriod?: string;
+  culturalContext?: string;
+  symbolism?: string[];
+}
+
+interface ColorPalette {
+  dominant: string;
+  accent: string;
+  complementary: string[];
+  hex: string[];
+}
+
 interface UploadedFile {
   filename: string;
   uniqueFilename?: string;
@@ -16,6 +37,10 @@ interface UploadedFile {
   success: boolean;
   error?: string;
   processing?: boolean;
+  // AI-generated metadata
+  aiAnalysis?: ArtworkAnalysis;
+  colorPalette?: ColorPalette;
+  roomDescription?: string;
 }
 
 interface UploaderProps {
@@ -171,7 +196,7 @@ export function Uploader({ onUploadComplete, maxFiles = 10, className = '' }: Up
       </div>
 
       {/* Rejected Files */}
-      {rejectedFiles.length > 0 && (
+      {rejectedFiles && rejectedFiles.length > 0 && (
         <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
           <h4 className="text-red-800 font-semibold mb-2">Rejected Files:</h4>
           {rejectedFiles.map((rejected, index) => (
@@ -212,13 +237,60 @@ export function Uploader({ onUploadComplete, maxFiles = 10, className = '' }: Up
 
                 {/* File Info */}
                 <div className="flex-grow">
-                  <h4 className="font-medium text-gray-900">{file.filename}</h4>
+                  <h4 className="font-medium text-gray-900">
+                    {file.aiAnalysis?.title || file.filename}
+                  </h4>
                   <div className="text-sm text-gray-500 space-y-1">
                     <p>Size: {formatFileSize(file.size)}</p>
                     {file.dimensions && (
                       <p>Dimensions: {file.dimensions.width} × {file.dimensions.height} px</p>
                     )}
                     {file.type && <p>Type: {file.type}</p>}
+
+                    {/* AI Analysis Summary */}
+                    {file.aiAnalysis && (
+                      <div className="mt-2 pt-2 border-t border-gray-200">
+                        <p className="text-blue-600 font-medium">AI Analysis:</p>
+                        <p className="text-xs">{file.aiAnalysis.description}</p>
+                        <div className="flex gap-2 mt-1">
+                          {file.aiAnalysis.style && (
+                            <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                              {file.aiAnalysis.style}
+                            </span>
+                          )}
+                          {file.aiAnalysis.mood && (
+                            <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">
+                              {file.aiAnalysis.mood}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Color Palette */}
+                    {file.colorPalette && file.colorPalette.hex && file.colorPalette.hex.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-green-600 font-medium text-xs">Color Palette:</p>
+                        <div className="flex gap-1 mt-1">
+                          {file.colorPalette.hex.slice(0, 5).map((color, colorIndex) => (
+                            <div
+                              key={colorIndex}
+                              className="w-4 h-4 rounded-full border border-gray-300"
+                              style={{ backgroundColor: color }}
+                              title={color}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Room Description */}
+                    {file.roomDescription && (
+                      <div className="mt-2">
+                        <p className="text-orange-600 font-medium text-xs">Room Suggestion:</p>
+                        <p className="text-xs text-gray-600">{file.roomDescription}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
 

@@ -4,6 +4,7 @@ import { join } from 'path';
 import { generateUniqueFilename } from '@/lib/util/slug';
 import sharp from 'sharp';
 import exifr from 'exifr';
+import { aiService } from '@/lib/ai-service';
 
 export async function POST(request: NextRequest) {
   try {
@@ -97,6 +98,37 @@ export async function POST(request: NextRequest) {
           console.error('Error reading image metadata:', error);
         }
 
+        // AI Analysis (optional - will gracefully fallback if no API keys configured)
+        let aiAnalysis = null;
+        let colorPalette = null;
+        try {
+          console.log('Starting AI analysis for:', file.name);
+
+          // Perform artwork analysis and color extraction in parallel
+          const [artworkAnalysis, colors] = await Promise.all([
+            aiService.analyzeArtwork(processedBuffer, file.type),
+            aiService.extractColorPalette(processedBuffer, file.type)
+          ]);
+
+          aiAnalysis = artworkAnalysis;
+          colorPalette = colors;
+
+          console.log('AI analysis completed for:', file.name);
+        } catch (error) {
+          console.log('AI analysis skipped for:', file.name, '- Error:', error.message);
+          // AI analysis is optional, continue without it
+        }
+
+        // Generate room description if we have AI analysis
+        let roomDescription = null;
+        if (aiAnalysis) {
+          try {
+            roomDescription = await aiService.generateRoomDescription(aiAnalysis, 'living room');
+          } catch (error) {
+            console.log('Room description generation failed:', error.message);
+          }
+        }
+
         results.push({
           filename: file.name,
           uniqueFilename,
@@ -112,6 +144,10 @@ export async function POST(request: NextRequest) {
           } : null,
           uploadPath: `/uploads/${uniqueFilename}`,
           thumbnailPath: `/uploads/${thumbnailFilename}`,
+          // AI-generated metadata
+          aiAnalysis,
+          colorPalette,
+          roomDescription,
           success: true,
         });
 

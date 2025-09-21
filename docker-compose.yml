@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL for auth and data persistence (better than SQLite for Docker)
   postgres:
@@ -32,47 +30,6 @@ services:
       timeout: 3s
       retries: 5
 
-  # Ollama for local LLM (Llama 3.2, Mistral, etc.)
-  ollama:
-    image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-      - ./models:/models
-    environment:
-      - OLLAMA_KEEP_ALIVE=24h
-      - OLLAMA_HOST=0.0.0.0
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    deploy:
-      resources:
-        limits:
-          memory: 8G
-        reservations:
-          memory: 4G
-
-  # Initialize Ollama with models
-  ollama-setup:
-    image: ollama/ollama:latest
-    depends_on:
-      ollama:
-        condition: service_healthy
-    volumes:
-      - ollama_data:/root/.ollama
-    entrypoint: |
-      sh -c "
-        sleep 5 &&
-        ollama pull llama3.2:3b &&
-        ollama pull llava:7b &&
-        ollama pull nomic-embed-text &&
-        echo 'Models loaded successfully'
-      "
-    profiles:
-      - setup
 
   # Main application
   app:
@@ -89,7 +46,6 @@ services:
       - ./uploads:/app/uploads
       - ./exports:/app/exports
       - ./public/mockup-scenes:/app/public/mockup-scenes
-      - ./models:/app/models
     environment:
       # Database
       - NODE_ENV=development
@@ -104,14 +60,8 @@ services:
       - EMAIL_FROM=noreply@artdrop.local
       - EMAIL_SERVER=smtp://mailhog:1025
 
-      # Local AI Services
-      - OLLAMA_HOST=http://ollama:11434
+      # AI Services (OpenAI and Anthropic)
       - ENABLE_GPU=false
-
-      # AI Model Selection
-      - PRIMARY_VISION_MODEL=clip-vit-base-patch32
-      - PRIMARY_LLM_MODEL=llama3.2:3b
-      - BG_REMOVAL_MODEL=bria-rmbg-1.4
 
       # Optional API Keys (fallbacks)
       - OPENAI_API_KEY=${OPENAI_API_KEY}
@@ -224,12 +174,10 @@ services:
       - ./uploads:/app/uploads
       - ./exports:/app/exports
       - ./public/mockup-scenes:/app/public/mockup-scenes
-      - ./models:/app/models
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://artdrop:artdrop_secret@postgres:5432/artdrop_db
       - REDIS_URL=redis://redis:6379
-      - OLLAMA_HOST=http://ollama:11434
       - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3001}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - EMAIL_FROM=${EMAIL_FROM}
@@ -237,7 +185,6 @@ services:
     depends_on:
       - postgres
       - redis
-      - ollama
     profiles:
       - production
 
@@ -245,6 +192,5 @@ volumes:
   postgres_data:
   redis_data:
   mailhog_data:
-  ollama_data:
   minio_data:
   qdrant_data:
